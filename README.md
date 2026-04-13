@@ -5,13 +5,14 @@ Mijn persoonlijke Claude Code hooks collectie.
 ## Installeren
 
 ```powershell
-git clone git@github.com:JOUW-USERNAME/claude-hooks.git
+git clone https://github.com/LWPDAutomations/claude-hooks.git
 cd claude-hooks
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
-Kopieer daarna de inhoud van `settings-fragment.json` naar je `~/.claude/settings.json`.
+Het install-script kopieert de hook-scripts naar `~/.claude/hooks/` en merged de hook-configuratie uit `settings-fragment.json` automatisch in `~/.claude/settings.json`.
 
 ## Hooks
 
 - **notify.ps1** - Windows notificatie als Claude klaar is (Stop event)
+- **secret-scanner.ps1** - Blokkeert writes die API keys, tokens of andere secrets bevatten (PreToolUse event)
