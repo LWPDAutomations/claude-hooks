@@ -1,5 +1,16 @@
 ﻿{
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\larsd\\.claude\\hooks\\secret-scanner.ps1\""
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
