@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\larsd\\.claude\\hooks\\secret-scanner.ps1\""
+            "command": "python \"C:\\Users\\larsd\\.claude\\hooks\\secret_scanner.py\""
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\larsd\\.claude\\hooks\\notify.ps1\""
+            "command": "python \"C:\\Users\\larsd\\.claude\\hooks\\notify.py\""
           }
         ]
       }
