@@ -1,87 +1,107 @@
-"""Notify - Stop hook that shows a desktop notification when Claude is done.
-Cross-platform: Windows toast, macOS osascript, Linux notify-send.
-Exit always 0.
+"""Notify - Stop hook that plays a sound and shows a toast notification.
+Cross-platform: Windows balloon tip, macOS osascript.
+Non-blocking, exits immediately. Max 2 seconds runtime.
 """
 
-import sys
 import platform
+import random
+import subprocess
+import sys
+import threading
+
+TITLE = "The Oracle"
+
+MESSAGES = [
+    "Task complete, sir.",
+    "Done. Awaiting your next move.",
+    "Systems nominal. Ready for deployment.",
+    "Build complete. Shall I prepare the next phase?",
+    "Another module locked in.",
+    "Mission accomplished. Standing by.",
+    "All clear on my end, boss.",
+    "Executed without incident.",
+    "The foundation is set. Your move.",
+    "Target acquired and handled.",
+    "Package delivered. Clean execution.",
+    "Done. No errors. No mercy.",
+    "Operation complete. Awaiting further instructions.",
+    "Everything checks out. Green across the board.",
+    "Built, tested, ready. Say the word.",
+    "Objective secured. What's next on the agenda?",
+    "Clean sweep. Not a single warning.",
+    "Deployed and verified. Moving to standby.",
+    "Another one off the board. Momentum is ours.",
+    "Precision work. Ready when you are.",
+    "All systems green. Shall I proceed?",
+    "Locked, loaded, and delivered.",
+    "The deed is done. Flawlessly, I might add.",
+    "Executed as planned. No surprises.",
+    "Phase complete. Awaiting authorization for the next.",
+    "Output verified. We're ahead of schedule.",
+]
 
 
-def notify_windows(title, message):
-    try:
-        from ctypes import windll, c_int, c_wchar_p, Structure, POINTER, sizeof
-        # Use simple MessageBeep + balloon via Windows Forms through PowerShell-free approach
-        # Fall back to a simpler ctypes approach with WinToast
-        import ctypes
-        ctypes.windll.user32.MessageBeep(0x00000040)  # MB_ICONINFORMATION sound
-    except Exception:
-        pass
+def notify_windows(message):
+    import winsound
+    threading.Thread(
+        target=winsound.PlaySound,
+        args=("SystemAsterisk", winsound.SND_ALIAS | winsound.SND_ASYNC),
+        daemon=True,
+    ).start()
 
-    # Try plyer first (richest notifications)
-    try:
-        from plyer import notification
-        notification.notify(title=title, message=message, timeout=5)
-        return
-    except ImportError:
-        pass
-
-    # Fall back to Windows toast via PowerShell one-liner (no -File, avoids script issues)
-    import subprocess
-    ps_script = (
-        "[System.Windows.Forms.NotifyIcon]$b=New-Object System.Windows.Forms.NotifyIcon;"
-        "$b.Icon=[System.Drawing.SystemIcons]::Information;"
-        f"$b.BalloonTipTitle='{title}';"
-        f"$b.BalloonTipText='{message}';"
-        "$b.Visible=$true;$b.ShowBalloonTip(5000);"
-        "Start-Sleep -Seconds 6;$b.Dispose()"
+    ps = (
+        "Add-Type -AssemblyName System.Windows.Forms;"
+        "[System.Windows.Forms.NotifyIcon]$n=New-Object System.Windows.Forms.NotifyIcon;"
+        "$n.Icon=[System.Drawing.SystemIcons]::Information;"
+        "$n.Visible=$true;"
+        f"$n.BalloonTipTitle='{TITLE}';"
+        f"$n.BalloonTipText='{message}';"
+        "$n.ShowBalloonTip(5000);"
+        "Start-Sleep -Seconds 6;"
+        "$n.Dispose()"
     )
-    try:
-        subprocess.Popen(
-            ["powershell", "-NoProfile", "-Command",
-             "Add-Type -AssemblyName System.Windows.Forms;" + ps_script],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        return
-    except FileNotFoundError:
-        pass
-
-    print(f"{title}: {message}")
+    subprocess.Popen(
+        ["powershell", "-NoProfile", "-Command", ps],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        creationflags=0x08000000,  # CREATE_NO_WINDOW
+    )
 
 
-def notify_macos(title, message):
-    import subprocess
-    try:
-        subprocess.run(
-            ["osascript", "-e", f'display notification "{message}" with title "{title}"'],
-            timeout=5
-        )
-        return
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
-    print(f"{title}: {message}")
+def notify_macos(message):
+    subprocess.Popen(
+        ["afplay", "/System/Library/Sounds/Glass.aiff"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    subprocess.Popen(
+        [
+            "osascript", "-e",
+            f'display notification "{message}" with title "{TITLE}"',
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
-def notify_linux(title, message):
-    import subprocess
-    try:
-        subprocess.run(["notify-send", title, message], timeout=5)
-        return
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
-    print(f"{title}: {message}")
+def notify_linux(message):
+    subprocess.Popen(
+        ["notify-send", TITLE, message],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def main():
-    title = "Claude Code"
-    message = "Klaar! Claude heeft je input nodig of is klaar met de taak."
-
+    message = random.choice(MESSAGES)
     os_name = platform.system()
+
     if os_name == "Windows":
-        notify_windows(title, message)
+        notify_windows(message)
     elif os_name == "Darwin":
-        notify_macos(title, message)
+        notify_macos(message)
     else:
-        notify_linux(title, message)
+        notify_linux(message)
 
 
 if __name__ == "__main__":
