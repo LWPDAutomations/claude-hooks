@@ -14,10 +14,10 @@ claude-hooks/
 ## Regels
 
 - ALLE hook-scripts MOETEN in de hooks/ map geschreven worden, NOOIT ergens anders
-- Ik werk op Windows, dus schrijf hooks als PowerShell (.ps1) scripts
-- Hook-scripts lezen JSON van stdin via [Console]::In.ReadToEnd() en communiceren via exit codes (0 = ok, 2 = blokkeer)
-- Gebruik [Console]::Error.WriteLine() voor stderr output, NIET Write-Error
-- Bij het registreren van hooks in settings-fragment.json, gebruik dit pad-formaat: C:\Users\larsd\.claude\hooks\SCRIPTNAAM.ps1
+- Schrijf hooks als Python (.py) scripts (cross-platform)
+- Hook-scripts lezen JSON van stdin via sys.stdin.read() en communiceren via exit codes (0 = ok, 2 = blokkeer)
+- Gebruik print(..., file=sys.stderr) voor stderr output
+- Bij het registreren van hooks in settings-fragment.json, gebruik dit pad-formaat: python "C:\Users\larsd\.claude\hooks\SCRIPTNAAM.py"
 - Na het aanmaken of fixen van een hook: toon een test-commando zodat ik het handmatig kan testen
 - Update ALTIJD settings-fragment.json als je een nieuwe hook toevoegt
 
