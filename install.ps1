@@ -42,25 +42,58 @@ if (!(Test-Path $SettingsFile)) {
         $settings | Add-Member -NotePropertyName "hooks" -NotePropertyValue @{} -Force
     }
 
-    $changed = @()
+    $added = @()
+    $skipped = @()
 
     # Merge elk event type (PreToolUse, Stop, etc.) uit het fragment
     foreach ($prop in $fragment.hooks.PSObject.Properties) {
         $eventName = $prop.Name
-        $fragmentHooks = $prop.Value
+        $fragmentEntries = @($prop.Value)
 
-        $settings.hooks | Add-Member -NotePropertyName $eventName -NotePropertyValue $fragmentHooks -Force
-        $changed += $eventName
+        # Haal bestaande entries op voor dit event type
+        $existingEntries = @()
+        if ($settings.hooks.PSObject.Properties[$eventName]) {
+            $existingEntries = @($settings.hooks.$eventName)
+        }
+
+        foreach ($entry in $fragmentEntries) {
+            $entryJson = $entry | ConvertTo-Json -Depth 10 -Compress
+
+            # Check of deze hook al bestaat (zelfde matcher + hooks combo)
+            $duplicate = $false
+            foreach ($existing in $existingEntries) {
+                $existingJson = $existing | ConvertTo-Json -Depth 10 -Compress
+                if ($entryJson -eq $existingJson) {
+                    $duplicate = $true
+                    break
+                }
+            }
+
+            if ($duplicate) {
+                $skipped += "$eventName (matcher: $($entry.matcher))"
+            } else {
+                $existingEntries += $entry
+                $added += "$eventName (matcher: $($entry.matcher))"
+            }
+        }
+
+        $settings.hooks | Add-Member -NotePropertyName $eventName -NotePropertyValue $existingEntries -Force
     }
 
     $settings | ConvertTo-Json -Depth 10 | Set-Content $SettingsFile -Encoding UTF8
 
-    if ($changed.Count -gt 0) {
+    if ($added.Count -gt 0) {
         Write-Host "Settings bijgewerkt in $SettingsFile" -ForegroundColor Green
-        foreach ($evt in $changed) {
-            Write-Host "  - Hook event gemerged: $evt" -ForegroundColor Cyan
+        foreach ($item in $added) {
+            Write-Host "  + Toegevoegd: $item" -ForegroundColor Cyan
         }
-    } else {
+    }
+    if ($skipped.Count -gt 0) {
+        foreach ($item in $skipped) {
+            Write-Host "  = Overgeslagen (bestaat al): $item" -ForegroundColor DarkGray
+        }
+    }
+    if ($added.Count -eq 0 -and $skipped.Count -eq 0) {
         Write-Host "Geen hook-configuratie om te mergen." -ForegroundColor Yellow
     }
 }
