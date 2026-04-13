@@ -21,6 +21,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:\\Users\\larsd\\.claude\\hooks\\syntax_checker.py\""
+          }
+        ]
+      }
     ]
   }
 }

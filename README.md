@@ -16,3 +16,4 @@ Het install-script kopieert de hook-scripts naar `~/.claude/hooks/` en merged de
 
 - **notify.ps1** - Windows notificatie als Claude klaar is (Stop event)
 - **secret-scanner.ps1** - Blokkeert writes die API keys, tokens of andere secrets bevatten (PreToolUse event)
+- **syntax_checker.py** - Checkt syntax van geschreven bestanden: .py, .json, .js/.jsx, .yaml/.yml (PostToolUse event)

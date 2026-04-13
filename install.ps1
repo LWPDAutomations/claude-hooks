@@ -12,10 +12,10 @@ if (!(Test-Path $HooksTarget)) {
     New-Item -ItemType Directory -Path $HooksTarget -Force | Out-Null
 }
 
-Copy-Item "$HooksSource\*" -Destination $HooksTarget -Force -Recurse
+Get-ChildItem $HooksSource -File | Copy-Item -Destination $HooksTarget -Force
 
 Write-Host "Hooks geinstalleerd in $HooksTarget" -ForegroundColor Green
-Get-ChildItem $HooksTarget | ForEach-Object {
+Get-ChildItem $HooksTarget -File | ForEach-Object {
     Write-Host "  - $($_.Name)" -ForegroundColor Cyan
 }
 
