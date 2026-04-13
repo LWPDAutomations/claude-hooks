@@ -4,13 +4,13 @@ Mijn persoonlijke Claude Code hooks collectie.
 
 ## Installeren
 
-```powershell
+```bash
 git clone https://github.com/LWPDAutomations/claude-hooks.git
 cd claude-hooks
-powershell -ExecutionPolicy Bypass -File install.ps1
+python install.py
 ```
 
-Het install-script kopieert de hook-scripts naar `~/.claude/hooks/` en merged de hook-configuratie uit `settings-fragment.json` automatisch in `~/.claude/settings.json`.
+Het install-script kopieert de `.py` hook-scripts naar `~/.claude/hooks/` en merged de hook-configuratie uit `settings-fragment.json` automatisch in `~/.claude/settings.json`. Werkt op Windows, macOS en Linux.
 
 ## Hooks
 
