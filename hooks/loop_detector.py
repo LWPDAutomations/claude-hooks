@@ -13,6 +13,7 @@ import time
 EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
 MAX_SAME_FILE_EDITS = 10
 MAX_CONSECUTIVE_REPEATS = 4
+CONSECUTIVE_WINDOW_SECONDS = 120  # only flag as loop if repeats happen within 2 minutes
 CLEANUP_AGE_SECONDS = 86400  # 24 hours
 
 
@@ -45,6 +46,12 @@ def main():
     session_id = data.get("session_id", "unknown")
     file_path = tool_input.get("file_path", "") if isinstance(tool_input, dict) else ""
 
+    # For Bash, use the command as identifier instead of file_path (which is always empty)
+    if tool_name == "Bash" and isinstance(tool_input, dict):
+        loop_key = tool_input.get("command", "")
+    else:
+        loop_key = file_path
+
     log_path = get_log_path(session_id)
 
     # Append current call to log
@@ -52,6 +59,7 @@ def main():
         "ts": time.time(),
         "tool": tool_name,
         "file": file_path,
+        "key": loop_key,
     }
     try:
         with open(log_path, "a", encoding="utf-8") as f:
@@ -82,22 +90,28 @@ def main():
             )
             sys.exit(2)
 
-    # Check 2: Same tool+file repeated MAX_CONSECUTIVE_REPEATS times in a row
+    # Check 2: Same tool+key repeated MAX_CONSECUTIVE_REPEATS times in a row
+    # within a short time window (spread out repeats are normal verification)
     if len(history) >= MAX_CONSECUTIVE_REPEATS:
         tail = history[-MAX_CONSECUTIVE_REPEATS:]
-        current_combo = (tool_name, file_path)
+        current_combo = (tool_name, loop_key)
         if all(
-            (h.get("tool"), h.get("file")) == current_combo
+            (h.get("tool"), h.get("key", h.get("file", ""))) == current_combo
             for h in tail
         ):
-            print(
-                f"Loop detected: {tool_name} op {file_path or 'onbekend'} "
-                f"is {MAX_CONSECUTIVE_REPEATS}x achter elkaar aangeroepen. "
-                "Stop en vraag de gebruiker om input. "
-                "Beschrijf wat je probeert te doen en waarom het niet lukt.",
-                file=sys.stderr,
-            )
-            sys.exit(2)
+            # Only flag if all repeats happened within the time window
+            timestamps = [h.get("ts", 0) for h in tail]
+            time_span = max(timestamps) - min(timestamps)
+            if time_span <= CONSECUTIVE_WINDOW_SECONDS:
+                label = loop_key[:80] if loop_key else "onbekend"
+                print(
+                    f"Loop detected: {tool_name} op {label} "
+                    f"is {MAX_CONSECUTIVE_REPEATS}x achter elkaar aangeroepen "
+                    f"binnen {int(time_span)}s. Stop en vraag de gebruiker om input. "
+                    "Beschrijf wat je probeert te doen en waarom het niet lukt.",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
 
     # Cleanup old session logs (non-blocking, best-effort)
     cleanup_old_logs()
