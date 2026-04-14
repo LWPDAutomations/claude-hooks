@@ -6,6 +6,7 @@ from settings-fragment.json into ~/.claude/settings.json.
 import json
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -16,6 +17,10 @@ SETTINGS_FRAGMENT = SCRIPT_DIR / "settings-fragment.json"
 CLAUDE_DIR = Path.home() / ".claude"
 HOOKS_TARGET = CLAUDE_DIR / "hooks"
 SETTINGS_FILE = CLAUDE_DIR / "settings.json"
+
+VSCODE_EXTENSIONS = [
+    "wenbopan.vscode-terminal-osc-notifier",  # Terminal notifications with click-to-focus
+]
 
 GREEN = "\033[92m"
 CYAN = "\033[96m"
@@ -102,9 +107,43 @@ def merge_settings():
         print(f"{YELLOW}Geen hook-configuratie om te mergen.{RESET}")
 
 
+def install_vscode_extensions():
+    """Install required VS Code extensions if not already present."""
+    print()
+    # On Windows, the CLI is "code.cmd"; on other platforms it's "code"
+    code_cmd = "code.cmd" if sys.platform == "win32" else "code"
+    try:
+        result = subprocess.run(
+            [code_cmd, "--list-extensions"],
+            capture_output=True, text=True, timeout=15, shell=(sys.platform == "win32"),
+        )
+        if result.returncode != 0:
+            print(f"{YELLOW}VS Code CLI niet gevonden, extensies overgeslagen.{RESET}")
+            return
+        installed = set(result.stdout.strip().splitlines())
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        print(f"{YELLOW}VS Code CLI niet gevonden, extensies overgeslagen.{RESET}")
+        return
+
+    for ext_id in VSCODE_EXTENSIONS:
+        if ext_id in installed:
+            print(f"  {GRAY}= VS Code extensie al geinstalleerd: {ext_id}{RESET}")
+        else:
+            print(f"  {CYAN}+ Installeer VS Code extensie: {ext_id}{RESET}")
+            res = subprocess.run(
+                [code_cmd, "--install-extension", ext_id],
+                capture_output=True, text=True, timeout=60, shell=(sys.platform == "win32"),
+            )
+            if res.returncode == 0:
+                print(f"  {GREEN}  Geinstalleerd!{RESET}")
+            else:
+                print(f"  {YELLOW}  Installatie mislukt: {res.stderr.strip()}{RESET}")
+
+
 def main():
     install_hooks()
     merge_settings()
+    install_vscode_extensions()
     print(f"\n{GREEN}Installatie compleet!{RESET}")
 
 

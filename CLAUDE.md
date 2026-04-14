@@ -6,8 +6,8 @@ Dit is mijn persoonlijke verzameling Claude Code hooks.
 
 claude-hooks/
   hooks/          <- Alle hook-scripts komen HIER in
-    *.ps1         <- PowerShell scripts (Windows)
-  install.ps1     <- Installeert hooks naar ~/.claude/hooks/
+    *.py          <- Python scripts (cross-platform)
+  install.py      <- Installeert hooks naar ~/.claude/hooks/
   settings-fragment.json  <- Hook-registraties voor settings.json
   README.md
 
@@ -25,6 +25,5 @@ claude-hooks/
 
 Als een hook is aangemaakt, gefixt, of gewijzigd en getest:
 
-1. Draai install.ps1 om hooks te kopiëren naar ~/.claude/hooks/
-2. Merge de hook-config uit settings-fragment.json naar ~/.claude/settings.json
-3. Vraag mij of ik wil committen en pushen naar GitHub
+1. Draai `python install.py` om hooks te kopiëren naar ~/.claude/hooks/ en settings te mergen
+2. Vraag mij of ik wil committen en pushen naar GitHub

@@ -18,11 +18,31 @@
             "command": "python \"C:\\Users\\larsd\\.claude\\hooks\\loop_detector.py\""
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:\\Users\\larsd\\.claude\\hooks\\notify.py\""
+          }
+        ]
       }
     ],
     "Stop": [
       {
         "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"C:\\Users\\larsd\\.claude\\hooks\\notify.py\""
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt|idle_prompt",
         "hooks": [
           {
             "type": "command",
